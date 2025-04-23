@@ -1,0 +1,55 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
+function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+
+  const handleLogin = async () => {
+    try {
+      const res = await axios.post('http://localhost:5000/api/auth/login', {
+        email,
+        password,
+      });
+
+      localStorage.setItem('token', res.data.token);
+      navigate('/dashboard');
+    } catch (err) {
+      alert('Login failed');
+      console.error(err);
+    }
+  };
+
+  return (
+    <div className="container d-flex justify-content-center align-items-center min-vh-100">
+      <div className="card p-4 shadow" style={{ width: '100%', maxWidth: '400px' }}>
+        <h2 className="text-center mb-4">Login</h2>
+
+        <input
+          type="email"
+          placeholder="Email"
+          className="form-control mb-3"
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          className="form-control mb-3"
+          onChange={(e) => setPassword(e.target.value)}
+        />
+
+        <button className="btn btn-primary w-100" onClick={handleLogin}>
+          Login
+        </button>
+
+        <p className="text-center mt-3 text-muted">
+          Don’t have an account? <a href="/register">Register here</a>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export default Login;

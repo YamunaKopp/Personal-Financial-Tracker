@@ -1,0 +1,59 @@
+/* Global styles */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #101820, #1a1a2e);
+  color: white;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #00ffcc;
+  text-shadow: 0 0 5px #00ffcc, 0 0 10px #00ffcc;
+}
+
+/* Links */
+a {
+  color: #00ffe0;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* Buttons */
+button {
+  background-color: #00ffc3;
+  border: none;
+  color: #000;
+  font-weight: bold;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s ease;
+  box-shadow: 0 0 8px #00ffe0;
+}
+button:hover {
+  background-color: #00ccaa;
+  box-shadow: 0 0 12px #00ffe0, 0 0 20px #00ffe0;
+}
+
+/* Bootstrap override */
+.card {
+  background: transparent;
+  border: none;
+}
+
+/* Scrollbar styling (optional) */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #00ffcc;
+  border-radius: 4px;
+}
