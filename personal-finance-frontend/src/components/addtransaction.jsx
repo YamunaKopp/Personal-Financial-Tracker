@@ -6,6 +6,7 @@ function AddTransaction({ onTransactionAdded }) {
   const [amount, setAmount] = useState('');
   const [type, setType] = useState('income');
   const [category, setCategory] = useState('Other');
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,18 +20,15 @@ function AddTransaction({ onTransactionAdded }) {
     try {
       await axios.post(
         'http://localhost:5000/api/transactions',
-        { description, amount, type, category },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { description, amount, type, category, date },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       setDescription('');
       setAmount('');
       setType('income');
       setCategory('Other');
+      setDate(new Date().toISOString().slice(0, 10));
       onTransactionAdded();
     } catch (err) {
       console.error('Failed to add transaction:', err);
@@ -72,7 +70,7 @@ function AddTransaction({ onTransactionAdded }) {
 
       {type === 'expense' && (
         <select
-          className="form-select mb-3"
+          className="form-select mb-2"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
         >
@@ -83,6 +81,13 @@ function AddTransaction({ onTransactionAdded }) {
           <option value="Other">Other</option>
         </select>
       )}
+
+      <input
+        className="form-control mb-3"
+        type="date"
+        value={date}
+        onChange={(e) => setDate(e.target.value)}
+      />
 
       <button className="btn btn-success w-100">Add</button>
     </form>

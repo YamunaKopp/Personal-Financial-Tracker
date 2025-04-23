@@ -8,9 +8,7 @@ function TransactionList({ refresh, onTransactionDeleted }) {
     const fetchData = async () => {
       try {
         const res = await axios.get('http://localhost:5000/api/transactions', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         setTransactions(res.data);
       } catch (err) {
@@ -27,9 +25,7 @@ function TransactionList({ refresh, onTransactionDeleted }) {
 
     try {
       await axios.delete(`http://localhost:5000/api/transactions/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
 
       setTransactions((prev) => prev.filter((tx) => tx.id !== id));
@@ -47,31 +43,45 @@ function TransactionList({ refresh, onTransactionDeleted }) {
       {transactions.length === 0 ? (
         <p className="text-muted">No transactions yet.</p>
       ) : (
-        <ul className="list-group">
-          {transactions.map((tx) => (
-            <li
-              key={tx.id}
-              className={`list-group-item d-flex justify-content-between align-items-center ${
-                tx.type === 'income' ? 'list-group-item-success' : 'list-group-item-danger'
-              }`}
-            >
-              <div>
-                <strong>{tx.description}</strong> <br />
-                <small className="text-muted">{tx.category}</small>
-              </div>
-
-              <div className="d-flex align-items-center">
-                <span className="me-3 fw-bold">{Number(tx.amount).toLocaleString()} ₹</span>
-                <button
-                  className="btn btn-sm btn-outline-light"
-                  onClick={() => handleDelete(tx.id)}
-                >
-                  Delete
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <div className="table-responsive">
+          <table className="table table-dark table-striped table-hover text-white">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transactions.map((tx, index) => (
+                <tr key={tx.id}>
+                  <td>{index + 1}</td>
+                  <td>{tx.description}</td>
+                  <td>{tx.category}</td>
+                  <td className={tx.type === 'income' ? 'text-success' : 'text-danger'}>
+                    {tx.type}
+                  </td>
+                  <td className="fw-bold">
+                    {Number(tx.amount).toLocaleString()} ₹
+                  </td>
+                  <td>{new Date(tx.date).toLocaleDateString()}</td>
+                  <td>
+                    <button
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={() => handleDelete(tx.id)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

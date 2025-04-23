@@ -11,7 +11,6 @@ const SECRET = 'my_super_secret_key_123!';
 app.use(cors());
 app.use(express.json());
 
-// ✅ MySQL connection
 let db;
 async function connectDB() {
   db = await mysql.createConnection({
@@ -24,13 +23,11 @@ async function connectDB() {
 }
 connectDB();
 
-// ✅ JWT Middleware
 function verifyToken(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'No token provided' });
   }
-
   const token = authHeader.split(' ')[1];
   try {
     const decoded = jwt.verify(token, SECRET);
@@ -42,7 +39,6 @@ function verifyToken(req, res, next) {
   }
 }
 
-// ✅ Register
 app.post('/api/auth/register', async (req, res) => {
   const { name, email, password } = req.body;
   try {
@@ -59,17 +55,14 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
-// ✅ Login
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   try {
     const [users] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
     const user = users[0];
-
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-
     const token = jwt.sign({ id: user.id, email: user.email }, SECRET, { expiresIn: '1d' });
     res.json({ token });
   } catch (err) {
@@ -78,7 +71,6 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// ✅ Get transactions
 app.get('/api/transactions', verifyToken, async (req, res) => {
   try {
     const [rows] = await db.execute(
@@ -92,7 +84,6 @@ app.get('/api/transactions', verifyToken, async (req, res) => {
   }
 });
 
-// ✅ Add transaction
 app.post('/api/transactions', verifyToken, async (req, res) => {
   const { description, amount, type, category } = req.body;
   try {
@@ -107,28 +98,103 @@ app.post('/api/transactions', verifyToken, async (req, res) => {
   }
 });
 
-// ✅ Delete transaction
 app.delete('/api/transactions/:id', verifyToken, async (req, res) => {
   const transactionId = req.params.id;
-
   try {
-    console.log(`Attempting to delete transaction ID ${transactionId} for user ${req.user.id}`);
-    
     const [result] = await db.execute(
       'DELETE FROM transactions WHERE id = ? AND user_id = ?',
       [transactionId, req.user.id]
     );
-
     if (result.affectedRows === 0) {
-      console.warn('Delete failed: Transaction not found or unauthorized.');
       return res.status(404).json({ error: 'Transaction not found or unauthorized' });
     }
-
-    console.log('Transaction deleted successfully.');
     res.json({ message: 'Transaction deleted' });
   } catch (err) {
     console.error('Delete transaction error:', err);
     res.status(500).json({ error: 'Failed to delete transaction' });
+  }
+});
+
+app.post('/api/budgets/set', verifyToken, async (req, res) => {
+  const { category, amount } = req.body;
+  try {
+    const [existing] = await db.execute(
+      'SELECT * FROM budgets WHERE user_id = ? AND category = ?',
+      [req.user.id, category]
+    );
+    if (existing.length > 0) {
+      await db.execute(
+        'UPDATE budgets SET limit_amount = ? WHERE user_id = ? AND category = ?',
+        [amount, req.user.id, category]
+      );
+    } else {
+      await db.execute(
+        'INSERT INTO budgets (user_id, category, limit_amount) VALUES (?, ?, ?)',
+        [req.user.id, category, amount]
+      );
+    }
+    res.json({ message: 'Budget saved successfully' });
+  } catch (err) {
+    console.error('Set budget error:', err);
+    res.status(500).json({ error: 'Failed to save budget' });
+  }
+});
+
+app.get('/api/budgets', verifyToken, async (req, res) => {
+  try {
+    const [budgets] = await db.execute(
+      'SELECT category, limit_amount AS amount FROM budgets WHERE user_id = ?',
+      [req.user.id]
+    );
+    res.json(budgets);
+  } catch (err) {
+    console.error('Fetch budgets error:', err);
+    res.status(500).json({ error: 'Failed to fetch budgets' });
+  }
+});
+
+app.post('/api/goals', verifyToken, async (req, res) => {
+  const { goal_name, target_amount, deadline } = req.body;
+  try {
+    await db.execute(
+      'INSERT INTO savings_goals (user_id, goal_name, target_amount, deadline) VALUES (?, ?, ?, ?)',
+      [req.user.id, goal_name, target_amount, deadline || null]
+    );
+    res.status(201).json({ message: 'Goal added successfully' });
+  } catch (err) {
+    console.error('Add goal error:', err);
+    res.status(500).json({ error: 'Failed to add goal' });
+  }
+});
+
+app.get('/api/goals', verifyToken, async (req, res) => {
+  try {
+    const [rows] = await db.execute(
+      'SELECT * FROM savings_goals WHERE user_id = ? ORDER BY id DESC',
+      [req.user.id]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('Fetch goals error:', err);
+    res.status(500).json({ error: 'Failed to fetch goals' });
+  }
+});
+
+app.patch('/api/goals/:id/save', verifyToken, async (req, res) => {
+  const goalId = req.params.id;
+  const { amount } = req.body;
+  try {
+    const [result] = await db.execute(
+      'UPDATE savings_goals SET saved_amount = saved_amount + ? WHERE id = ? AND user_id = ?',
+      [amount, goalId, req.user.id]
+    );
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Goal not found or unauthorized' });
+    }
+    res.json({ message: 'Saved amount updated successfully' });
+  } catch (err) {
+    console.error('Error updating saved amount:', err);
+    res.status(500).json({ error: 'Failed to update saved amount' });
   }
 });
 

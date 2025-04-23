@@ -44,19 +44,19 @@ function Summary() {
         <div className="col">
           <h6 style={whiteHeading}>Total Income</h6>
           <p className="fw-bold text-light" style={numberStyle}>
-            {income.toLocaleString()} ₹
+            {income.toLocaleString()} $
           </p>
         </div>
         <div className="col">
           <h6 style={whiteHeading}>Total Expenses</h6>
           <p className="fw-bold text-light" style={numberStyle}>
-            {expense.toLocaleString()} ₹
+            {expense.toLocaleString()} $
           </p>
         </div>
         <div className="col">
           <h6 style={whiteHeading}>Balance</h6>
           <p className="fw-bold text-light" style={numberStyle}>
-            {balance.toLocaleString()} ₹
+            {balance.toLocaleString()} $
           </p>
         </div>
       </div>
